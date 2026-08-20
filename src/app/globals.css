@@ -1,26 +1,137 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* ========================================
+   GLOWVÉ DESIGN SYSTEM
+   Sunny Beauty Editorial
+   Yellow × Coral × Espresso
+======================================== */
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  /* ========================================
+     FONTS
+  ======================================== */
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* ========================================
+     BRAND
+  ======================================== */
+
+  /* Main sunny yellow */
+  --color-primary: #ffc928;
+  --color-primary-hover: #f2b800;
+  --color-primary-soft: #fff3c4;
+
+  /* Coral beauty accent */
+  --color-secondary: #ff6b5e;
+  --color-secondary-hover: #ef5549;
+  --color-secondary-soft: #ffe2dd;
+
+  /* Warm orange accent */
+  --color-accent: #ff9f43;
+  --color-accent-soft: #fff0dd;
+
+  /* ========================================
+     BACKGROUND & SURFACE
+  ======================================== */
+
+  --color-background: #fffdf7;
+  --color-foreground: #30251d;
+
+  --color-surface: #ffffff;
+  --color-surface-soft: #fffaf0;
+  --color-surface-muted: #f8f1e5;
+
+  /* Dark editorial */
+  --color-surface-dark: #30251d;
+  --color-surface-dark-soft: #46372d;
+
+  /* ========================================
+     TEXT
+  ======================================== */
+
+  --color-text-primary: #30251d;
+  --color-text-secondary: #756c62;
+  --color-text-muted: #a79d91;
+  --color-text-inverse: #ffffff;
+
+  /* ========================================
+     BORDER
+  ======================================== */
+
+  --color-border: #eee6d8;
+  --color-border-strong: #dfd3c1;
+
+  /* ========================================
+     STATUS
+  ======================================== */
+
+  --color-success: #3f9b72;
+  --color-warning: #f59e0b;
+  --color-danger: #e6574c;
+
+  /* ========================================
+     SHADOWS
+  ======================================== */
+
+  --shadow-soft:
+    0 8px 30px rgba(48, 37, 29, 0.07);
+
+  --shadow-card:
+    0 14px 45px rgba(48, 37, 29, 0.10);
+
+  --shadow-float:
+    0 24px 70px rgba(48, 37, 29, 0.16);
+
+  /* ========================================
+     RADIUS
+  ======================================== */
+
+  --radius-xs: 0.5rem;
+  --radius-sm: 0.75rem;
+  --radius-md: 1rem;
+  --radius-lg: 1.5rem;
+  --radius-xl: 2rem;
+  --radius-2xl: 2.5rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+:root {
+  --background: #fffdf7;
+  --foreground: #30251d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
+  min-height: 100vh;
+  margin: 0;
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button,
+a {
+  touch-action: manipulation;
+}
+
+::selection {
+  background: #ffc928;
+  color: #30251d;
 }
