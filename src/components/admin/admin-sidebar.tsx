@@ -257,7 +257,7 @@ export function AdminSidebar() {
   return (
     <>
       {/* Desktop Sidebar */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col border-r border-border bg-surface lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col overflow-y-auto border-r border-border bg-surface lg:flex">
         <NavigationContent
           pathname={pathname}
           brandName={brandName}
@@ -318,7 +318,7 @@ export function AdminSidebar() {
         />
 
         <aside
-          className={`absolute inset-y-0 right-0 flex w-[min(21rem,calc(100vw-2rem))] flex-col bg-surface shadow-2xl transition-transform duration-300 ease-out ${
+  className={`absolute inset-y-0 right-0 flex w-[min(21rem,calc(100vw-2rem))] flex-col overflow-y-auto bg-surface shadow-2xl transition-transform duration-300 ease-out ${
             isMobileOpen
               ? 'translate-x-0'
               : 'translate-x-full'
