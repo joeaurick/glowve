@@ -685,7 +685,7 @@ export default function HeroSettingsPage() {
                         {form.hero_highlight ||
                           'Highlight'}
 
-                        <span className="absolute bottom-0 left-0 -z-0 h-2 w-full rounded-full bg-primary" />
+                        <span className="absolute bottom-0 left-0 z-0 h-2 w-full rounded-full bg-primary" />
                       </span>
                     </h3>
 
