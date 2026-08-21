@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
+  AlertCircle,
   ArrowUpRight,
   CheckCircle2,
   Clock3,
@@ -11,6 +12,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Trash2,
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase/client'
@@ -57,7 +59,11 @@ export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [deletingArticleId, setDeletingArticleId] =
+    useState<string | null>(null)
   const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => {
@@ -75,11 +81,12 @@ export default function ArticlesPage() {
         return
       }
 
-      const { data: adminUser, error: adminError } = await supabase
-        .from('admin_users')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle()
+      const { data: adminUser, error: adminError } =
+        await supabase
+          .from('admin_users')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle()
 
       if (adminError || !adminUser) {
         await supabase.auth.signOut()
@@ -87,32 +94,33 @@ export default function ArticlesPage() {
         return
       }
 
-      const [articlesResult, categoriesResult] = await Promise.all([
-        supabase
-          .from('articles')
-          .select(
-            `
-              id,
-              title,
-              slug,
-              excerpt,
-              category_id,
-              status,
-              created_at,
-              published_at
-            `,
-          )
-          .order('created_at', {
-            ascending: false,
-          }),
+      const [articlesResult, categoriesResult] =
+        await Promise.all([
+          supabase
+            .from('articles')
+            .select(
+              `
+                id,
+                title,
+                slug,
+                excerpt,
+                category_id,
+                status,
+                created_at,
+                published_at
+              `,
+            )
+            .order('created_at', {
+              ascending: false,
+            }),
 
-        supabase
-          .from('categories')
-          .select('id, name')
-          .order('name', {
-            ascending: true,
-          }),
-      ])
+          supabase
+            .from('categories')
+            .select('id, name')
+            .order('name', {
+              ascending: true,
+            }),
+        ])
 
       if (articlesResult.error) {
         console.error(
@@ -154,6 +162,52 @@ export default function ArticlesPage() {
     )
 
     return category?.name ?? 'Tanpa kategori'
+  }
+
+  async function handleDelete(article: Article) {
+    const confirmed = window.confirm(
+      `Hapus artikel "${article.title}"?\n\nArtikel yang sudah dihapus tidak dapat dikembalikan.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setErrorMessage('')
+    setSuccessMessage('')
+    setIsDeleting(true)
+    setDeletingArticleId(article.id)
+
+    const { error } = await supabase
+      .from('articles')
+      .delete()
+      .eq('id', article.id)
+
+    if (error) {
+      console.error(
+        'Failed to delete article:',
+        error,
+      )
+
+      setErrorMessage(
+        'Artikel gagal dihapus. Silakan coba lagi.',
+      )
+
+      setIsDeleting(false)
+      setDeletingArticleId(null)
+      return
+    }
+
+    setArticles((currentArticles) =>
+      currentArticles.filter(
+        (item) => item.id !== article.id,
+      ),
+    )
+
+    setSuccessMessage('Artikel berhasil dihapus.')
+
+    setIsDeleting(false)
+    setDeletingArticleId(null)
   }
 
   const normalizedSearchQuery = searchQuery
@@ -219,8 +273,9 @@ export default function ArticlesPage() {
               </h1>
 
               <p className="mt-3 max-w-xl text-sm leading-6 text-text-secondary sm:text-base">
-                Kelola beauty guide, review, rekomendasi, dan
-                artikel yang mengarahkan pembaca ke produk pilihan.
+                Kelola beauty guide, review, rekomendasi,
+                dan artikel yang mengarahkan pembaca ke
+                produk pilihan.
               </p>
             </div>
 
@@ -307,13 +362,25 @@ export default function ArticlesPage() {
           {errorMessage ? (
             <div
               role="alert"
-              className="mt-5 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+              className="mt-5 flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
             >
+              <AlertCircle size={18} />
               {errorMessage}
             </div>
           ) : null}
 
-          {!errorMessage && filteredArticles.length === 0 ? (
+          {successMessage ? (
+            <div
+              role="status"
+              className="mt-5 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700"
+            >
+              <CheckCircle2 size={18} />
+              {successMessage}
+            </div>
+          ) : null}
+
+          {!errorMessage &&
+          filteredArticles.length === 0 ? (
             <div className="flex flex-col items-center px-4 py-14 text-center">
               <div className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft text-text-primary">
                 <FileText size={24} />
@@ -327,7 +394,7 @@ export default function ArticlesPage() {
 
               <p className="mt-2 max-w-sm text-sm leading-6 text-text-secondary">
                 {articles.length === 0
-                  ? 'Mulai buat artikel pertama untuk website Glowvé.'
+                  ? 'Mulai buat artikel pertama untuk website Suara Wanita.'
                   : 'Coba gunakan kata kunci pencarian yang berbeda.'}
               </p>
 
@@ -345,76 +412,108 @@ export default function ArticlesPage() {
 
           {filteredArticles.length > 0 ? (
             <div className="mt-5 space-y-3">
-              {filteredArticles.map((article) => (
-                <article
-                  key={article.id}
-                  className="rounded-2xl border border-border bg-background p-4 transition-colors hover:bg-primary-soft/30 sm:p-5"
-                >
-                  <div className="flex flex-col gap-4">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span
-                          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
-                            article.status === 'published'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-primary-soft text-text-primary'
-                          }`}
-                        >
-                          {getStatusLabel(article.status)}
-                        </span>
+              {filteredArticles.map((article) => {
+                const isCurrentArticleDeleting =
+                  isDeleting &&
+                  deletingArticleId === article.id
 
-                        <span className="text-xs text-text-muted">
-                          {getCategoryName(article.category_id)}
-                        </span>
+                return (
+                  <article
+                    key={article.id}
+                    className="rounded-2xl border border-border bg-background p-4 transition-colors hover:bg-primary-soft/30 sm:p-5"
+                  >
+                    <div className="flex flex-col gap-4">
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+                              article.status === 'published'
+                                ? 'bg-green-100 text-green-700'
+                                : 'bg-primary-soft text-text-primary'
+                            }`}
+                          >
+                            {getStatusLabel(article.status)}
+                          </span>
+
+                          <span className="text-xs text-text-muted">
+                            {getCategoryName(
+                              article.category_id,
+                            )}
+                          </span>
+                        </div>
+
+                        <h3 className="mt-3 wrap-break-word text-base font-semibold text-text-primary sm:text-lg">
+                          {article.title}
+                        </h3>
+
+                        <p className="mt-1 break-all text-xs text-text-muted">
+                          /reviews/{article.slug}
+                        </p>
+
+                        {article.excerpt ? (
+                          <p className="mt-3 line-clamp-2 text-sm leading-6 text-text-secondary">
+                            {article.excerpt}
+                          </p>
+                        ) : null}
+
+                        <p className="mt-3 text-xs text-text-muted">
+                          Dibuat{' '}
+                          {formatDate(article.created_at)}
+                        </p>
                       </div>
 
-                      <h3 className="mt-3 wrap-break-word text-base font-semibold text-text-primary sm:text-lg">
-                        {article.title}
-                      </h3>
-
-                      <p className="mt-1 break-all text-xs text-text-muted">
-                        /reviews/{article.slug}
-                      </p>
-
-                      {article.excerpt ? (
-                        <p className="mt-3 line-clamp-2 text-sm leading-6 text-text-secondary">
-                          {article.excerpt}
-                        </p>
-                      ) : null}
-
-                      <p className="mt-3 text-xs text-text-muted">
-                        Dibuat{' '}
-                        {formatDate(article.created_at)}
-                      </p>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-                      <Link
-                        href={`/admin/articles/${article.id}/edit`}
-                        className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-primary-soft"
-                      >
-                        <Pencil size={16} />
-                        Edit
-                      </Link>
-
-                      {article.status === 'published' ? (
+                      <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
                         <Link
-                          href={`/reviews/${article.slug}`}
-                          target="_blank"
-                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-text-primary transition-transform hover:-translate-y-0.5"
+                          href={`/admin/articles/${article.id}/edit`}
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-text-primary transition-colors hover:bg-primary-soft"
                         >
-                          Lihat
-                          <ArrowUpRight size={16} />
+                          <Pencil size={16} />
+                          Edit
                         </Link>
-                      ) : (
-                        <div className="flex h-11 items-center justify-center rounded-xl bg-surface px-4 text-xs font-medium text-text-muted">
-                          Draft belum publik
-                        </div>
-                      )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void handleDelete(article)
+                          }}
+                          disabled={isDeleting}
+                          className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 text-sm font-semibold text-red-600 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {isCurrentArticleDeleting ? (
+                            <>
+                              <LoaderCircle
+                                size={16}
+                                className="animate-spin"
+                              />
+                              Menghapus...
+                            </>
+                          ) : (
+                            <>
+                              <Trash2 size={16} />
+                              Hapus
+                            </>
+                          )}
+                        </button>
+
+                        {article.status === 'published' ? (
+                          <Link
+                            href={`/reviews/${article.slug}`}
+                            target="_blank"
+                            className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-semibold text-text-primary transition-transform hover:-translate-y-0.5 sm:col-span-1"
+                          >
+                            Lihat
+                            <ArrowUpRight size={16} />
+                          </Link>
+                        ) : (
+                          <div className="col-span-2 flex h-11 items-center justify-center rounded-xl bg-surface px-4 text-xs font-medium text-text-muted sm:col-span-1">
+                            Draft belum publik
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </article>
-              ))}
+                  </article>
+                )
+              })}
             </div>
           ) : null}
         </section>
