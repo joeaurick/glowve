@@ -9,6 +9,7 @@ import {
   LoaderCircle,
   Package,
   Plus,
+  Trash2,
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase/client'
@@ -39,9 +40,19 @@ function formatPrice(value: number | null) {
 }
 
 export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [errorMessage, setErrorMessage] = useState('')
+  const [products, setProducts] =
+    useState<Product[]>([])
+
+  const [isLoading, setIsLoading] =
+    useState(true)
+
+  const [errorMessage, setErrorMessage] =
+    useState('')
+
+  const [
+    deletingProductId,
+    setDeletingProductId,
+  ] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadProducts() {
@@ -58,12 +69,14 @@ export default function AdminProductsPage() {
         return
       }
 
-      const { data: adminUser, error: adminError } =
-        await supabase
-          .from('admin_users')
-          .select('user_id')
-          .eq('user_id', user.id)
-          .maybeSingle()
+      const {
+        data: adminUser,
+        error: adminError,
+      } = await supabase
+        .from('admin_users')
+        .select('user_id')
+        .eq('user_id', user.id)
+        .maybeSingle()
 
       if (adminError || !adminUser) {
         await supabase.auth.signOut()
@@ -107,6 +120,49 @@ export default function AdminProductsPage() {
     void loadProducts()
   }, [])
 
+  async function handleDeleteProduct(
+    product: Product,
+  ) {
+    const confirmed = window.confirm(
+      `Hapus produk "${product.name}"? Tindakan ini tidak dapat dibatalkan.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setDeletingProductId(product.id)
+    setErrorMessage('')
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', product.id)
+
+    if (error) {
+      console.error(
+        'Failed to delete product:',
+        error,
+      )
+
+      setErrorMessage(
+        'Produk gagal dihapus.',
+      )
+
+      setDeletingProductId(null)
+      return
+    }
+
+    setProducts((currentProducts) =>
+      currentProducts.filter(
+        (currentProduct) =>
+          currentProduct.id !== product.id,
+      ),
+    )
+
+    setDeletingProductId(null)
+  }
+
   if (isLoading) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background">
@@ -139,8 +195,8 @@ export default function AdminProductsPage() {
             </h1>
 
             <p className="mt-3 max-w-xl text-sm leading-6 text-text-secondary sm:text-base">
-              Kelola produk beauty yang akan ditampilkan
-              di website Glowvé.
+              Kelola produk yang akan ditampilkan
+              di website Suara Wanita.
             </p>
           </div>
 
@@ -174,8 +230,8 @@ export default function AdminProductsPage() {
             </h2>
 
             <p className="mt-2 max-w-md text-sm leading-6 text-text-secondary">
-              Tambahkan produk pertama untuk mulai membangun
-              katalog beauty Glowvé.
+              Tambahkan produk pertama untuk mulai
+              membangun katalog Suara Wanita.
             </p>
 
             <Link
@@ -190,22 +246,27 @@ export default function AdminProductsPage() {
 
         {products.length > 0 ? (
           <div className="mt-8 overflow-hidden rounded-3xl border border-border bg-surface">
-            <div className="hidden grid-cols-[72px_minmax(0,1fr)_minmax(120px,0.7fr)_150px_120px] gap-4 border-b border-border px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-text-muted lg:grid">
+            <div className="hidden grid-cols-[72px_minmax(0,1fr)_minmax(120px,0.7fr)_150px_120px_80px] gap-4 border-b border-border px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-text-muted lg:grid">
               <span>Gambar</span>
               <span>Produk</span>
               <span>Brand</span>
               <span>Harga</span>
               <span>Status</span>
+              <span className="text-right">
+                Aksi
+              </span>
             </div>
 
             <div className="divide-y divide-border">
               {products.map((product) => (
-                <Link
+                <div
                   key={product.id}
-                  href={`/admin/products/${product.id}`}
-                  className="group block transition-colors hover:bg-primary-soft/40"
+                  className="group flex gap-4 p-4 transition-colors hover:bg-primary-soft/40 sm:p-5 lg:grid lg:grid-cols-[72px_minmax(0,1fr)_minmax(120px,0.7fr)_150px_120px_80px] lg:items-center lg:gap-4 lg:px-6"
                 >
-                  <div className="flex gap-4 p-4 sm:p-5 lg:grid lg:grid-cols-[72px_minmax(0,1fr)_minmax(120px,0.7fr)_150px_120px] lg:items-center lg:gap-4 lg:px-6">
+                  <Link
+                    href={`/admin/products/${product.id}`}
+                    className="contents"
+                  >
                     <div className="relative flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-primary-soft text-text-muted lg:size-18">
                       {product.featured_image ? (
                         <img
@@ -250,10 +311,11 @@ export default function AdminProductsPage() {
                       {formatPrice(product.price)}
                     </div>
 
-                    <div className="flex items-start lg:items-center">
+                    <div className="hidden lg:block">
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                          product.status === 'published'
+                          product.status ===
+                          'published'
                             ? 'bg-green-100 text-green-700'
                             : 'bg-primary-soft text-text-primary'
                         }`}
@@ -263,8 +325,50 @@ export default function AdminProductsPage() {
                           : 'Draft'}
                       </span>
                     </div>
+                  </Link>
+
+                  <div className="flex shrink-0 items-start justify-end lg:items-center">
+                    <button
+                      type="button"
+                      aria-label={`Hapus ${product.name}`}
+                      disabled={
+                        deletingProductId ===
+                        product.id
+                      }
+                      onClick={() =>
+                        void handleDeleteProduct(
+                          product,
+                        )
+                      }
+                      className="flex size-10 items-center justify-center rounded-xl text-text-muted transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {deletingProductId ===
+                      product.id ? (
+                        <LoaderCircle
+                          size={18}
+                          className="animate-spin"
+                        />
+                      ) : (
+                        <Trash2 size={18} />
+                      )}
+                    </button>
                   </div>
-                </Link>
+
+                  <div className="absolute right-16 mt-0 flex lg:hidden">
+                    <span
+                      className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                        product.status ===
+                        'published'
+                          ? 'bg-green-100 text-green-700'
+                          : 'bg-primary-soft text-text-primary'
+                      }`}
+                    >
+                      {product.status === 'published'
+                        ? 'Published'
+                        : 'Draft'}
+                    </span>
+                  </div>
+                </div>
               ))}
             </div>
           </div>

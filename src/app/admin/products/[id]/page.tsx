@@ -10,6 +10,7 @@ import { useParams } from 'next/navigation'
 import {
   ArrowLeft,
   CheckCircle2,
+  ExternalLink,
   LoaderCircle,
   Package,
   Save,
@@ -33,6 +34,7 @@ type Product = {
   featured_image: string | null
   brand: string | null
   price: number | null
+  purchase_link: string | null
   category_id: string | null
   status: ProductStatus
 }
@@ -67,6 +69,8 @@ export default function EditProductPage() {
   const [featuredImage, setFeaturedImage] =
     useState('')
   const [price, setPrice] = useState('')
+  const [purchaseLink, setPurchaseLink] =
+    useState('')
   const [categoryId, setCategoryId] =
     useState('')
   const [status, setStatus] =
@@ -116,17 +120,20 @@ export default function EditProductPage() {
       ] = await Promise.all([
         supabase
           .from('products')
-          .select(`
-            id,
-            name,
-            slug,
-            description,
-            featured_image,
-            brand,
-            price,
-            category_id,
-            status
-          `)
+          .select(
+            `
+              id,
+              name,
+              slug,
+              description,
+              featured_image,
+              brand,
+              price,
+              purchase_link,
+              category_id,
+              status
+            `,
+          )
           .eq('id', productId)
           .maybeSingle(),
 
@@ -185,6 +192,9 @@ export default function EditProductPage() {
         product.price !== null
           ? String(product.price)
           : '',
+      )
+      setPurchaseLink(
+        product.purchase_link ?? '',
       )
       setCategoryId(
         product.category_id ?? '',
@@ -254,6 +264,8 @@ export default function EditProductPage() {
           featuredImage.trim() || null,
         brand: brand.trim() || null,
         price: parsedPrice,
+        purchase_link:
+          purchaseLink.trim() || null,
         category_id: categoryId || null,
         status,
         updated_at: new Date().toISOString(),
@@ -441,6 +453,41 @@ export default function EditProductPage() {
                 disabled={isSaving}
                 className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
               />
+            </div>
+
+            <div className="sm:col-span-2">
+              <label
+                htmlFor="purchaseLink"
+                className="mb-2 block text-sm font-medium text-text-primary"
+              >
+                Link pembelian
+              </label>
+
+              <div className="relative">
+                <ExternalLink
+                  size={18}
+                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+
+                <input
+                  id="purchaseLink"
+                  type="url"
+                  value={purchaseLink}
+                  onChange={(event) =>
+                    setPurchaseLink(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="https://..."
+                  disabled={isSaving}
+                  className="h-12 w-full rounded-2xl border border-border bg-background pl-11 pr-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                />
+              </div>
+
+              <p className="mt-2 text-xs leading-5 text-text-muted">
+                Masukkan link marketplace atau website
+                tempat produk dapat dibeli.
+              </p>
             </div>
 
             <div className="sm:col-span-2">
