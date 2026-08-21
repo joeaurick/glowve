@@ -75,7 +75,7 @@ export default async function ProductsPage() {
 
   return (
     <main className="min-h-screen bg-background">
-      <Navbar brandName={brandName} />
+      <Navbar />
 
       <section className="border-b border-border bg-primary-soft/40">
         <div className="mx-auto w-full max-w-6xl px-4 py-16 sm:px-6 sm:py-20 lg:px-8">
