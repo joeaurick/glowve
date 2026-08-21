@@ -6,14 +6,16 @@ import {
   useState,
 } from 'react'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
+import { useParams, useRouter } from 'next/navigation'
 import {
+  AlertTriangle,
   ArrowLeft,
   CheckCircle2,
   ExternalLink,
   LoaderCircle,
   Package,
   Save,
+  Trash2,
 } from 'lucide-react'
 
 import { ProductImageUpload } from '@/components/admin/product-image-upload'
@@ -34,8 +36,8 @@ type Product = {
   featured_image: string | null
   brand: string | null
   price: number | null
-  purchase_link: string | null
   category_id: string | null
+  purchase_url: string | null
   status: ProductStatus
 }
 
@@ -51,9 +53,11 @@ function createSlug(value: string) {
 
 export default function EditProductPage() {
   const params = useParams()
+  const router = useRouter()
 
-  const productId =
-    typeof params.id === 'string'
+  const productId = Array.isArray(params.id)
+    ? params.id[0] ?? ''
+    : typeof params.id === 'string'
       ? params.id
       : ''
 
@@ -69,9 +73,9 @@ export default function EditProductPage() {
   const [featuredImage, setFeaturedImage] =
     useState('')
   const [price, setPrice] = useState('')
-  const [purchaseLink, setPurchaseLink] =
-    useState('')
   const [categoryId, setCategoryId] =
+    useState('')
+  const [purchaseUrl, setPurchaseUrl] =
     useState('')
   const [status, setStatus] =
     useState<ProductStatus>('draft')
@@ -82,6 +86,9 @@ export default function EditProductPage() {
   const [isSaving, setIsSaving] =
     useState(false)
 
+  const [isDeleting, setIsDeleting] =
+    useState(false)
+
   const [errorMessage, setErrorMessage] =
     useState('')
 
@@ -90,25 +97,48 @@ export default function EditProductPage() {
 
   useEffect(() => {
     async function loadData() {
+      if (!productId) {
+        setErrorMessage(
+          'ID produk tidak ditemukan di URL.',
+        )
+        setIsLoading(false)
+        return
+      }
+
       setIsLoading(true)
       setErrorMessage('')
+      setSuccessMessage('')
+
+      console.log(
+        'Loading product with ID:',
+        productId,
+      )
 
       const {
         data: { user },
+        error: userError,
       } = await supabase.auth.getUser()
 
-      if (!user) {
+      if (userError || !user) {
         window.location.href = '/login'
         return
       }
 
-      const { data: adminUser } = await supabase
+      const {
+        data: adminUser,
+        error: adminError,
+      } = await supabase
         .from('admin_users')
         .select('user_id')
         .eq('user_id', user.id)
         .maybeSingle()
 
-      if (!adminUser) {
+      if (adminError || !adminUser) {
+        console.error(
+          'Admin verification failed:',
+          adminError,
+        )
+
         await supabase.auth.signOut()
         window.location.href = '/login'
         return
@@ -120,20 +150,18 @@ export default function EditProductPage() {
       ] = await Promise.all([
         supabase
           .from('products')
-          .select(
-            `
-              id,
-              name,
-              slug,
-              description,
-              featured_image,
-              brand,
-              price,
-              purchase_link,
-              category_id,
-              status
-            `,
-          )
+          .select(`
+            id,
+            name,
+            slug,
+            description,
+            featured_image,
+            brand,
+            price,
+            category_id,
+            purchase_url,
+            status
+          `)
           .eq('id', productId)
           .maybeSingle(),
 
@@ -145,18 +173,35 @@ export default function EditProductPage() {
           }),
       ])
 
-      if (
-        productResult.error ||
-        !productResult.data
-      ) {
+      console.log(
+        'Product query result:',
+        productResult,
+      )
+
+      if (productResult.error) {
         console.error(
           'Failed to load product:',
           productResult.error,
         )
 
         setErrorMessage(
+          `Produk gagal dimuat: ${productResult.error.message}`,
+        )
+
+        setIsLoading(false)
+        return
+      }
+
+      if (!productResult.data) {
+        console.error(
+          'Product not found for ID:',
+          productId,
+        )
+
+        setErrorMessage(
           'Produk tidak ditemukan.',
         )
+
         setIsLoading(false)
         return
       }
@@ -170,6 +215,7 @@ export default function EditProductPage() {
         setErrorMessage(
           'Kategori gagal dimuat.',
         )
+
         setIsLoading(false)
         return
       }
@@ -178,7 +224,7 @@ export default function EditProductPage() {
         productResult.data as Product
 
       setCategories(
-        categoriesResult.data ?? [],
+        (categoriesResult.data ?? []) as Category[],
       )
 
       setName(product.name)
@@ -188,25 +234,27 @@ export default function EditProductPage() {
       setFeaturedImage(
         product.featured_image ?? '',
       )
+
       setPrice(
         product.price !== null
           ? String(product.price)
           : '',
       )
-      setPurchaseLink(
-        product.purchase_link ?? '',
-      )
+
       setCategoryId(
         product.category_id ?? '',
       )
+
+      setPurchaseUrl(
+        product.purchase_url ?? '',
+      )
+
       setStatus(product.status)
 
       setIsLoading(false)
     }
 
-    if (productId) {
-      void loadData()
-    }
+    void loadData()
   }, [productId])
 
   function handleNameChange(value: string) {
@@ -221,6 +269,13 @@ export default function EditProductPage() {
 
     setErrorMessage('')
     setSuccessMessage('')
+
+    if (!productId) {
+      setErrorMessage(
+        'ID produk tidak valid.',
+      )
+      return
+    }
 
     if (!name.trim()) {
       setErrorMessage(
@@ -264,9 +319,9 @@ export default function EditProductPage() {
           featuredImage.trim() || null,
         brand: brand.trim() || null,
         price: parsedPrice,
-        purchase_link:
-          purchaseLink.trim() || null,
         category_id: categoryId || null,
+        purchase_url:
+          purchaseUrl.trim() || null,
         status,
         updated_at: new Date().toISOString(),
       })
@@ -284,7 +339,7 @@ export default function EditProductPage() {
         )
       } else {
         setErrorMessage(
-          'Produk gagal diperbarui.',
+          `Produk gagal diperbarui: ${error.message}`,
         )
       }
 
@@ -299,9 +354,52 @@ export default function EditProductPage() {
     setIsSaving(false)
 
     setTimeout(() => {
-      window.location.href =
-        '/admin/products'
+      router.push('/admin/products')
+      router.refresh()
     }, 800)
+  }
+
+  async function handleDelete() {
+    if (!productId) {
+      setErrorMessage(
+        'ID produk tidak valid.',
+      )
+      return
+    }
+
+    const confirmed = window.confirm(
+      `Yakin ingin menghapus produk "${name}"?\n\nProduk yang sudah dihapus tidak dapat dikembalikan.`,
+    )
+
+    if (!confirmed) {
+      return
+    }
+
+    setErrorMessage('')
+    setSuccessMessage('')
+    setIsDeleting(true)
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', productId)
+
+    if (error) {
+      console.error(
+        'Failed to delete product:',
+        error,
+      )
+
+      setErrorMessage(
+        `Produk gagal dihapus: ${error.message}`,
+      )
+
+      setIsDeleting(false)
+      return
+    }
+
+    router.push('/admin/products')
+    router.refresh()
   }
 
   if (isLoading) {
@@ -312,6 +410,7 @@ export default function EditProductPage() {
             size={20}
             className="animate-spin"
           />
+
           Memuat produk...
         </div>
       </main>
@@ -326,6 +425,7 @@ export default function EditProductPage() {
           className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
         >
           <ArrowLeft size={17} />
+
           Kembali ke produk
         </Link>
 
@@ -350,15 +450,21 @@ export default function EditProductPage() {
         {errorMessage ? (
           <div
             role="alert"
-            className="mt-8 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+            className="mt-8 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
           >
-            {errorMessage}
+            <AlertTriangle
+              size={18}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>{errorMessage}</span>
           </div>
         ) : null}
 
         {successMessage ? (
           <div className="mt-8 flex items-center gap-2 rounded-2xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700">
             <CheckCircle2 size={18} />
+
             {successMessage}
           </div>
         ) : null}
@@ -386,8 +492,8 @@ export default function EditProductPage() {
                   )
                 }
                 required
-                disabled={isSaving}
-                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
             </div>
 
@@ -409,8 +515,8 @@ export default function EditProductPage() {
                   )
                 }
                 required
-                disabled={isSaving}
-                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
             </div>
 
@@ -429,8 +535,8 @@ export default function EditProductPage() {
                 onChange={(event) =>
                   setBrand(event.target.value)
                 }
-                disabled={isSaving}
-                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
             </div>
 
@@ -450,44 +556,9 @@ export default function EditProductPage() {
                 onChange={(event) =>
                   setPrice(event.target.value)
                 }
-                disabled={isSaving}
-                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label
-                htmlFor="purchaseLink"
-                className="mb-2 block text-sm font-medium text-text-primary"
-              >
-                Link pembelian
-              </label>
-
-              <div className="relative">
-                <ExternalLink
-                  size={18}
-                  className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-text-muted"
-                />
-
-                <input
-                  id="purchaseLink"
-                  type="url"
-                  value={purchaseLink}
-                  onChange={(event) =>
-                    setPurchaseLink(
-                      event.target.value,
-                    )
-                  }
-                  placeholder="https://..."
-                  disabled={isSaving}
-                  className="h-12 w-full rounded-2xl border border-border bg-background pl-11 pr-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
-                />
-              </div>
-
-              <p className="mt-2 text-xs leading-5 text-text-muted">
-                Masukkan link marketplace atau website
-                tempat produk dapat dibeli.
-              </p>
             </div>
 
             <div className="sm:col-span-2">
@@ -504,8 +575,8 @@ export default function EditProductPage() {
                 onChange={(event) =>
                   setCategoryId(event.target.value)
                 }
-                disabled={isSaving}
-                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               >
                 <option value="">
                   Pilih kategori
@@ -535,6 +606,42 @@ export default function EditProductPage() {
 
             <div className="sm:col-span-2">
               <label
+                htmlFor="purchaseUrl"
+                className="mb-2 block text-sm font-medium text-text-primary"
+              >
+                Link pembelian
+              </label>
+
+              <div className="relative">
+                <input
+                  id="purchaseUrl"
+                  type="url"
+                  value={purchaseUrl}
+                  onChange={(event) =>
+                    setPurchaseUrl(
+                      event.target.value,
+                    )
+                  }
+                  placeholder="https://..."
+                  disabled={isSaving || isDeleting}
+                  className="h-12 w-full rounded-2xl border border-border bg-background px-4 pr-12 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
+                />
+
+                <ExternalLink
+                  size={17}
+                  className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-text-muted"
+                />
+              </div>
+
+              <p className="mt-2 text-xs leading-5 text-text-muted">
+                Masukkan link tempat pengguna dapat
+                membeli produk. Tidak terbatas pada
+                marketplace tertentu.
+              </p>
+            </div>
+
+            <div className="sm:col-span-2">
+              <label
                 htmlFor="description"
                 className="mb-2 block text-sm font-medium text-text-primary"
               >
@@ -548,8 +655,8 @@ export default function EditProductPage() {
                   setDescription(event.target.value)
                 }
                 rows={6}
-                disabled={isSaving}
-                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="w-full rounded-2xl border border-border bg-background px-4 py-3 text-sm leading-6 text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               />
             </div>
 
@@ -570,8 +677,8 @@ export default function EditProductPage() {
                       .value as ProductStatus,
                   )
                 }
-                disabled={isSaving}
-                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40"
+                disabled={isSaving || isDeleting}
+                className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-60"
               >
                 <option value="draft">
                   Draft
@@ -584,34 +691,62 @@ export default function EditProductPage() {
             </div>
           </div>
 
-          <div className="mt-8 flex flex-col-reverse gap-3 border-t border-border pt-6 sm:flex-row sm:justify-end">
-            <Link
-              href="/admin/products"
-              className="inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold text-text-secondary transition-colors hover:bg-background hover:text-text-primary"
-            >
-              Batal
-            </Link>
-
+          <div className="mt-8 flex flex-col gap-3 border-t border-border pt-6 sm:flex-row sm:items-center sm:justify-between">
             <button
-              type="submit"
-              disabled={isSaving}
-              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-text-primary transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              type="button"
+              onClick={handleDelete}
+              disabled={isSaving || isDeleting}
+              className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-red-50 px-5 text-sm font-semibold text-red-700 transition-colors hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? (
+              {isDeleting ? (
                 <>
                   <LoaderCircle
                     size={18}
                     className="animate-spin"
                   />
-                  Menyimpan...
+
+                  Menghapus...
                 </>
               ) : (
                 <>
-                  <Save size={18} />
-                  Simpan perubahan
+                  <Trash2 size={18} />
+
+                  Hapus produk
                 </>
               )}
             </button>
+
+            <div className="flex flex-col-reverse gap-3 sm:flex-row">
+              <Link
+                href="/admin/products"
+                className="inline-flex h-12 items-center justify-center rounded-2xl px-5 text-sm font-semibold text-text-secondary transition-colors hover:bg-background hover:text-text-primary"
+              >
+                Batal
+              </Link>
+
+              <button
+                type="submit"
+                disabled={isSaving || isDeleting}
+                className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-sm font-semibold text-text-primary transition-transform hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSaving ? (
+                  <>
+                    <LoaderCircle
+                      size={18}
+                      className="animate-spin"
+                    />
+
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <Save size={18} />
+
+                    Simpan perubahan
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </form>
       </div>
