@@ -1,12 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
-  ArrowRight,
   Menu,
   Search,
-  Sparkles,
   X,
 } from 'lucide-react'
 
@@ -14,30 +13,11 @@ import { Button } from '@/components/ui/button'
 import { Container } from '@/components/ui/container'
 
 type NavbarProps = {
-  brandName?: string
+  brandName: string
 }
 
-const navigation = [
-  {
-    label: 'Beranda',
-    href: '/',
-  },
-  {
-    label: 'Artikel',
-    href: '#discover',
-  },
-  {
-    label: 'Kategori',
-    href: '#categories',
-  },
-  {
-    label: 'Tentang',
-    href: '#about',
-  },
-]
-
 export function Navbar({
-  brandName = 'SUARA WANITA',
+  brandName,
 }: NavbarProps) {
   const [isMenuOpen, setIsMenuOpen] =
     useState(false)
@@ -47,138 +27,155 @@ export function Navbar({
   }
 
   return (
-    <header className="sticky top-0 z-50 px-3 pt-3 sm:px-5 sm:pt-5">
+    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-xl">
       <Container>
-        <div className="relative rounded-[1.75rem] border border-border bg-surface/90 shadow-card backdrop-blur-xl">
-          <div className="flex h-16 items-center justify-between px-4 sm:h-20 sm:px-6">
-            {/* Brand */}
+        <div className="flex h-16 items-center justify-between sm:h-20">
+          {/* Logo */}
+          <Link
+            href="/"
+            onClick={handleCloseMenu}
+            className="flex min-w-0 items-center gap-3"
+          >
+            <div className="relative size-10 shrink-0 overflow-hidden sm:size-11">
+              <Image
+                src="/images/suara-wanita-logo.png"
+                alt="Suara Wanita"
+                fill
+                priority
+                sizes="(max-width: 640px) 40px, 44px"
+                className="object-contain"
+              />
+            </div>
+
+            <div className="min-w-0">
+              <span className="block truncate text-base font-semibold tracking-tight text-text-primary sm:text-lg">
+                {brandName}
+              </span>
+
+              <span className="hidden text-[9px] font-medium uppercase tracking-[0.18em] text-text-muted sm:block">
+                Ruang untuk bersuara
+              </span>
+            </div>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <nav className="hidden items-center gap-8 lg:flex">
             <Link
-              href="/"
-              onClick={handleCloseMenu}
-              className="group flex items-center gap-3"
+              href="#discover"
+              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
             >
-              <div className="relative flex size-10 shrink-0 items-center justify-center rounded-2xl bg-primary text-text-inverse shadow-soft transition-all duration-300 group-hover:-rotate-6 group-hover:scale-110 sm:size-11">
-                <Sparkles
-                  size={20}
-                  strokeWidth={2.5}
-                />
-
-                <div className="absolute -right-1 -top-1 size-3 rounded-full bg-secondary" />
-              </div>
-
-              <div className="min-w-0">
-                <p className="text-base font-bold tracking-[-0.04em] text-text-primary sm:text-lg">
-                  {brandName}
-                </p>
-
-                <p className="hidden text-[9px] font-bold uppercase tracking-[0.18em] text-secondary sm:block">
-                  Ruang untuk bersuara
-                </p>
-              </div>
+              Beranda
             </Link>
 
-            {/* Desktop Navigation */}
-            <nav className="hidden items-center gap-1 lg:flex">
-              {navigation.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="rounded-full px-4 py-2.5 text-sm font-semibold text-text-secondary transition-all duration-200 hover:bg-primary-soft hover:text-primary"
-                >
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
+            <Link
+              href="#reviews"
+              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+            >
+              Artikel
+            </Link>
 
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                aria-label="Cari artikel"
-                className="flex size-10 items-center justify-center rounded-2xl bg-primary-soft text-primary transition-all hover:-translate-y-0.5 hover:scale-105 sm:size-11"
-              >
-                <Search size={19} />
-              </button>
+            <Link
+              href="#beauty-picks"
+              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+            >
+              Pilihan
+            </Link>
 
-              <Button
-                variant="dark"
-                size="sm"
-                className="hidden gap-2 rounded-2xl px-5 shadow-soft sm:inline-flex"
-                asChild
-              >
-                <Link href="#discover">
-                  Jelajahi
+            <Link
+              href="#about"
+              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+            >
+              Tentang
+            </Link>
+          </nav>
 
-                  <ArrowRight size={16} />
-                </Link>
-              </Button>
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              aria-label="Cari"
+              className="flex size-10 items-center justify-center rounded-full text-text-primary transition-colors hover:bg-surface-muted"
+            >
+              <Search size={20} />
+            </button>
 
-              {/* Mobile menu */}
-              <button
-                type="button"
-                aria-label={
-                  isMenuOpen
-                    ? 'Tutup menu'
-                    : 'Buka menu'
-                }
-                onClick={() =>
-                  setIsMenuOpen((current) => !current)
-                }
-                className="flex size-10 items-center justify-center rounded-2xl bg-secondary text-text-inverse transition-all active:scale-95 lg:hidden"
-              >
-                {isMenuOpen ? (
-                  <X size={21} />
-                ) : (
-                  <Menu size={21} />
-                )}
-              </button>
-            </div>
-          </div>
+            <Button
+              variant="dark"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
+              Jelajahi
+            </Button>
 
-          {/* Mobile Menu */}
-          <div
-            className={`overflow-hidden transition-all duration-300 lg:hidden ${
-              isMenuOpen
-                ? 'max-h-128 opacity-100'
-                : 'max-h-0 opacity-0'
-            }`}
-          >
-            <div className="border-t border-border px-4 pb-4 pt-3">
-              <nav className="grid gap-2">
-                {navigation.map((item, index) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    onClick={handleCloseMenu}
-                    className={`group flex items-center justify-between rounded-2xl px-4 py-4 text-sm font-semibold transition-all ${
-                      index % 2 === 0
-                        ? 'bg-primary-soft text-text-primary'
-                        : 'bg-secondary-soft text-text-primary'
-                    }`}
-                  >
-                    <span>{item.label}</span>
-
-                    <span className="flex size-8 items-center justify-center rounded-full bg-surface text-primary transition-transform group-hover:translate-x-1">
-                      <ArrowRight size={16} />
-                    </span>
-                  </Link>
-                ))}
-
-                <Link
-                  href="#discover"
-                  onClick={handleCloseMenu}
-                  className="mt-2 flex items-center justify-between rounded-2xl bg-primary px-5 py-4 text-sm font-bold text-text-inverse shadow-soft"
-                >
-                  Mulai Jelajahi
-
-                  <span className="flex size-8 items-center justify-center rounded-full bg-surface/20">
-                    <ArrowRight size={17} />
-                  </span>
-                </Link>
-              </nav>
-            </div>
+            <button
+              type="button"
+              aria-label={
+                isMenuOpen
+                  ? 'Tutup menu'
+                  : 'Buka menu'
+              }
+              onClick={() =>
+                setIsMenuOpen((current) => !current)
+              }
+              className="flex size-10 items-center justify-center rounded-full bg-surface-muted text-text-primary transition-colors lg:hidden"
+            >
+              {isMenuOpen ? (
+                <X size={21} />
+              ) : (
+                <Menu size={21} />
+              )}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Navigation */}
+        {isMenuOpen ? (
+          <nav className="border-t border-border py-4 lg:hidden">
+            <div className="flex flex-col gap-1">
+              <Link
+                href="#discover"
+                onClick={handleCloseMenu}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              >
+                Beranda
+              </Link>
+
+              <Link
+                href="#reviews"
+                onClick={handleCloseMenu}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              >
+                Artikel
+              </Link>
+
+              <Link
+                href="#beauty-picks"
+                onClick={handleCloseMenu}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              >
+                Pilihan
+              </Link>
+
+              <Link
+                href="#about"
+                onClick={handleCloseMenu}
+                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+              >
+                Tentang
+              </Link>
+
+              <div className="mt-3 border-t border-border pt-3">
+                <Button
+                  variant="dark"
+                  size="lg"
+                  className="w-full"
+                >
+                  Jelajahi
+                </Button>
+              </div>
+            </div>
+          </nav>
+        ) : null}
       </Container>
     </header>
   )

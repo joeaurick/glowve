@@ -2,61 +2,25 @@
 
 import {
   FormEvent,
-  useEffect,
   useState,
 } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import {
   ArrowLeft,
   LockKeyhole,
   Mail,
-  Sparkles,
 } from 'lucide-react'
 
 import { supabase } from '@/lib/supabase/client'
 
-type SiteSettings = {
-  brand_name: string | null
-}
-
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [errorMessage, setErrorMessage] = useState('')
-
-  const [brandName, setBrandName] =
-    useState('GLOWVÉ')
-
-  useEffect(() => {
-    async function loadSiteSettings() {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('brand_name')
-        .limit(1)
-        .maybeSingle()
-
-      if (error) {
-        console.error(
-          'Failed to load site settings:',
-          error,
-        )
-
-        return
-      }
-
-      const settings = data as SiteSettings | null
-
-      const databaseBrandName =
-        settings?.brand_name?.trim()
-
-      if (databaseBrandName) {
-        setBrandName(databaseBrandName)
-      }
-    }
-
-    void loadSiteSettings()
-  }, [])
+  const [isLoading, setIsLoading] =
+    useState(false)
+  const [errorMessage, setErrorMessage] =
+    useState('')
 
   async function handleSubmit(
     event: FormEvent<HTMLFormElement>,
@@ -84,9 +48,9 @@ export default function LoginPage() {
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4 py-8">
-      <div className="absolute -left-24 top-0 size-72 rounded-full bg-primary/30 blur-3xl" />
+      <div className="pointer-events-none absolute -left-24 top-0 size-72 rounded-full bg-primary/30 blur-3xl" />
 
-      <div className="absolute -bottom-24 -right-24 size-72 rounded-full bg-secondary/20 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-24 -right-24 size-72 rounded-full bg-secondary/20 blur-3xl" />
 
       <div className="relative w-full max-w-md">
         <Link
@@ -98,13 +62,23 @@ export default function LoginPage() {
         </Link>
 
         <section className="rounded-4xl border border-border bg-surface p-5 shadow-card sm:p-8">
-          <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-text-primary">
-            <Sparkles size={22} />
+          {/* Logo */}
+          <div className="flex justify-center">
+            <div className="relative h-20 w-56 sm:w-64">
+              <Image
+                src="/images/suara-wanita-logo.png"
+                alt="Suara Wanita"
+                fill
+                priority
+                sizes="(max-width: 640px) 224px, 256px"
+                className="object-contain"
+              />
+            </div>
           </div>
 
-          <div className="mt-6">
+          <div className="mt-8">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-secondary">
-              {brandName} Admin
+              Admin Dashboard
             </p>
 
             <h1 className="mt-3 text-3xl font-semibold tracking-tight text-text-primary">
@@ -113,7 +87,7 @@ export default function LoginPage() {
 
             <p className="mt-3 text-sm leading-6 text-text-secondary">
               Masuk untuk mengelola artikel, produk,
-              dan konten {brandName}.
+              dan konten website.
             </p>
           </div>
 

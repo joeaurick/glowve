@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
@@ -81,14 +82,22 @@ function NavigationContent({
 }: NavigationContentProps) {
   return (
     <>
+      {/* Brand */}
       <div className="px-5 pb-5 pt-6">
         <Link
           href="/admin"
           onClick={onNavigate}
           className="group flex items-center gap-3"
         >
-          <div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-primary text-text-primary transition-transform duration-300 group-hover:rotate-6">
-            <Sparkles size={19} />
+          <div className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl transition-transform duration-300 group-hover:scale-105">
+            <Image
+              src="/images/suara-wanita-logo.png"
+              alt="Suara Wanita"
+              fill
+              sizes="44px"
+              className="object-contain"
+              priority
+            />
           </div>
 
           <div className="min-w-0">
@@ -103,6 +112,7 @@ function NavigationContent({
         </Link>
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 px-3 py-4">
         <p className="px-3 pb-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-text-muted">
           Workspace
@@ -148,6 +158,7 @@ function NavigationContent({
           })}
         </div>
 
+        {/* Website Card */}
         <div className="mt-8 px-3">
           <div className="rounded-3xl bg-primary-soft p-4">
             <div className="flex items-center gap-2">
@@ -157,7 +168,7 @@ function NavigationContent({
               />
 
               <p className="text-xs font-semibold text-text-primary">
-                {brandName} Beauty Guide
+                {brandName} Guide
               </p>
             </div>
 
@@ -178,6 +189,7 @@ function NavigationContent({
         </div>
       </nav>
 
+      {/* Admin Profile */}
       <div className="border-t border-border p-4">
         <div className="rounded-3xl bg-background p-3">
           <div className="flex items-center gap-3 px-1 py-2">
@@ -217,7 +229,7 @@ export function AdminSidebar() {
     useState(false)
 
   const [brandName, setBrandName] =
-    useState('GLOWVÉ')
+    useState('Suara Wanita')
 
   useEffect(() => {
     async function loadBrandName() {
@@ -273,12 +285,19 @@ export function AdminSidebar() {
           href="/admin"
           className="flex items-center gap-2.5"
         >
-          <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-text-primary">
-            <Sparkles size={17} />
+          <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
+            <Image
+              src="/images/suara-wanita-logo.png"
+              alt="Suara Wanita"
+              fill
+              sizes="40px"
+              className="object-contain"
+              priority
+            />
           </div>
 
-          <div>
-            <p className="text-sm font-semibold tracking-tight text-text-primary">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold tracking-tight text-text-primary">
               {brandName}
             </p>
 
@@ -292,13 +311,13 @@ export function AdminSidebar() {
           type="button"
           aria-label="Buka menu navigasi"
           onClick={() => setIsMobileOpen(true)}
-          className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-text-primary transition-transform active:scale-95"
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-text-primary transition-transform active:scale-95"
         >
           <Menu size={20} />
         </button>
       </header>
 
-      {/* Mobile Sidebar */}
+      {/* Mobile Sidebar Overlay */}
       <div
         className={`fixed inset-0 z-50 lg:hidden ${
           isMobileOpen
@@ -317,13 +336,15 @@ export function AdminSidebar() {
           }`}
         />
 
+        {/* Mobile Sidebar */}
         <aside
-  className={`absolute inset-y-0 right-0 flex w-[min(21rem,calc(100vw-2rem))] flex-col overflow-y-auto bg-surface shadow-2xl transition-transform duration-300 ease-out ${
+          className={`absolute inset-y-0 right-0 flex w-[min(21rem,calc(100vw-2rem))] flex-col overflow-y-auto bg-surface shadow-2xl transition-transform duration-300 ease-out ${
             isMobileOpen
               ? 'translate-x-0'
               : 'translate-x-full'
           }`}
         >
+          {/* Close Button */}
           <div className="absolute right-4 top-4 z-10">
             <button
               type="button"
