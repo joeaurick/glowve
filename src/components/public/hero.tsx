@@ -204,7 +204,7 @@ export async function Hero() {
                 {heroImageUrl ? (
                   <Image
                     src={heroImageUrl}
-                    alt="Glowvé beauty"
+                    alt="Suara Wanita beauty"
                     fill
                     priority
                     sizes="(max-width: 640px) 75vw, (max-width: 1024px) 60vw, 500px"

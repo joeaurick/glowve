@@ -156,7 +156,7 @@ export default async function ReviewsPage() {
           <div className="max-w-3xl">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary-soft px-3 py-1.5 text-xs font-semibold text-text-primary">
               <Sparkles size={14} />
-              Glowvé Beauty Guide
+              Suara Wanita Beauty Guide
             </div>
 
             <h1 className="mt-6 text-4xl font-semibold tracking-tight text-text-primary sm:text-5xl lg:text-6xl">
@@ -186,7 +186,7 @@ export default async function ReviewsPage() {
                 </p>
 
                 <p className="mt-0.5 text-sm text-text-secondary">
-                  Pilihan terbaru dari Glowvé
+                  Pilihan terbaru dari Suara Wanita
                 </p>
               </div>
             </div>
@@ -313,7 +313,7 @@ export default async function ReviewsPage() {
 
                   <p className="mt-3 max-w-xl text-sm leading-6 text-text-secondary sm:text-base">
                     Temukan lebih banyak panduan, tips, dan
-                    rekomendasi pilihan dari Glowvé.
+                    rekomendasi pilihan dari Suara Wanita.
                   </p>
                 </div>
 

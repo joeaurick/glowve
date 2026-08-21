@@ -255,7 +255,7 @@ export default function SettingsPage() {
 
                 <p className="mt-1 text-sm text-text-secondary">
                   Nama utama yang digunakan pada
-                  website Glowvé.
+                  website Suara Wanita.
                 </p>
               </div>
             </div>
@@ -270,7 +270,7 @@ export default function SettingsPage() {
                     value,
                   )
                 }
-                placeholder="GLOWVÉ"
+                placeholder="Suara Wanita"
               />
             </div>
           </section>
@@ -303,7 +303,7 @@ export default function SettingsPage() {
                     value,
                   )
                 }
-                placeholder="GLOWVÉ"
+                placeholder="Suara Wanita"
               />
 
               <TextAreaField

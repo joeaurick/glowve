@@ -30,7 +30,7 @@ export default function LandingPageSettingsPage() {
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary sm:text-base">
               Atur konten yang tampil di halaman utama
-              website Glowvé tanpa perlu mengubah kode.
+              website Suara Wanita tanpa perlu mengubah kode.
             </p>
           </div>
         </div>
@@ -58,7 +58,7 @@ export default function LandingPageSettingsPage() {
                   Ganti foto utama, label, judul,
                   deskripsi, dan tombol yang tampil
                   pertama kali saat pengunjung membuka
-                  Glowvé.
+                  Suara Wanita.
                 </p>
               </div>
 

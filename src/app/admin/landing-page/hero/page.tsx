@@ -340,7 +340,7 @@ export default function HeroSettingsPage() {
             <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary sm:text-base">
               Atur teks, foto, dan tombol yang tampil
               pertama kali saat pengunjung membuka
-              Glowvé.
+              Suara Wanita.
             </p>
           </div>
 

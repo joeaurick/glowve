@@ -44,7 +44,7 @@ export async function Footer() {
   }
 
   const brandName =
-    siteSettings?.brand_name || 'GLOWVÉ'
+    siteSettings?.brand_name || 'Suara Wanita'
 
   const description =
     footerSettings?.description ||

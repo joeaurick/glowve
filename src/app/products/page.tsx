@@ -71,7 +71,7 @@ export default async function ProductsPage() {
   }
 
   const brandName =
-    settings?.brand_name?.trim() || 'GLOWVÉ'
+    settings?.brand_name?.trim() || 'Suara Wanita'
 
   return (
     <main className="min-h-screen bg-background">

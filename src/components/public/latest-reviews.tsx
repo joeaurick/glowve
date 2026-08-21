@@ -156,7 +156,7 @@ export async function LatestReviews() {
                 />
 
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-text-secondary">
-                  Fresh from Glowvé
+                  Fresh from Suara Wanita
                 </p>
               </div>
 
@@ -169,7 +169,7 @@ export async function LatestReviews() {
               </h2>
 
               <p className="mt-5 max-w-xl text-base leading-7 text-text-secondary sm:text-lg">
-                Artikel terbaru dari Glowvé akan muncul
+                Artikel terbaru dari Suara Wanita akan muncul
                 di sini.
               </p>
             </div>
@@ -222,7 +222,7 @@ export async function LatestReviews() {
               />
 
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-text-secondary">
-                Fresh from Glowvé
+                Fresh from Suara Wanita
               </p>
             </div>
 

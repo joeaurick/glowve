@@ -123,7 +123,7 @@ export default function AdminPage() {
 
             <p className="mt-3 max-w-2xl text-sm leading-6 text-text-secondary sm:text-base">
               Kelola artikel, produk, kategori, dan konten
-              website Glowvé dari satu tempat.
+              website Suara Wanita dari satu tempat.
             </p>
           </div>
 
@@ -192,7 +192,7 @@ export default function AdminPage() {
 
               <p className="mt-2 text-sm leading-6 text-text-secondary">
                 Buat review, beauty guide, atau artikel
-                rekomendasi baru untuk website Glowvé.
+                rekomendasi baru untuk website Suara Wanita.
               </p>
 
               <span className="mt-5 inline-flex text-sm font-semibold text-secondary">

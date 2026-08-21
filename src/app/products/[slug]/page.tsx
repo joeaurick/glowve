@@ -171,7 +171,7 @@ export default async function ProductDetailPage({
   }
 
   const brandName =
-    settings?.brand_name?.trim() || 'GLOWVÉ'
+    settings?.brand_name?.trim() || 'Suara Wanita'
 
   const product = await getProduct(slug)
 

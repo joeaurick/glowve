@@ -143,7 +143,7 @@ export async function generateMetadata({
     ])
 
   const brandName =
-    siteSettings?.brand_name?.trim() || 'GLOWVÉ'
+    siteSettings?.brand_name?.trim() || 'Suara Wanita'
 
   if (!category) {
     return {
@@ -206,7 +206,7 @@ export default async function CategoryPage({
   )
 
   const brandName =
-    siteSettings?.brand_name?.trim() || 'GLOWVÉ'
+    siteSettings?.brand_name?.trim() || 'Suara Wanita'
 
   return (
     <main className="min-h-screen overflow-hidden bg-background">

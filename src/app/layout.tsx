@@ -56,7 +56,7 @@ export async function generateMetadata(): Promise<Metadata> {
   }
 
   const brandName =
-    settings?.brand_name?.trim() || 'GLOWVÉ'
+    settings?.brand_name?.trim() || 'Suara Wanita'
 
   const siteTitle =
     settings?.site_title?.trim() || brandName
