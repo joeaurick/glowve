@@ -2,17 +2,16 @@
 
 import {
   useEffect,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
 } from 'react'
 import { EditorContent, useEditor } from '@tiptap/react'
-import { BubbleMenu } from '@tiptap/extension-bubble-menu'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import {
   Bold,
-  ChevronDown,
   Heading1,
   Heading2,
   Heading3,
@@ -41,6 +40,11 @@ type ToolbarButtonProps = {
 }
 
 type HeadingLevel = 1 | 2 | 3 | 4
+
+type BubblePosition = {
+  top: number
+  left: number
+}
 
 type LinkModalProps = {
   isOpen: boolean
@@ -93,7 +97,7 @@ function LinkModal({
   onClose,
   onSubmit,
 }: LinkModalProps) {
-  const [url, setUrl] = useState(initialUrl)
+  const [url, setUrl] = useState('')
 
   useEffect(() => {
     if (isOpen) {
@@ -105,11 +109,7 @@ function LinkModal({
     return null
   }
 
-  function handleSubmit(
-    event: FormEvent<HTMLFormElement>,
-  ) {
-    event.preventDefault()
-
+  function handleSave() {
     onSubmit(url.trim())
   }
 
@@ -119,10 +119,10 @@ function LinkModal({
         type="button"
         aria-label="Tutup modal"
         onClick={onClose}
-        className="absolute inset-0 cursor-default bg-black/40 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
       />
 
-      <div className="relative z-10 w-full max-w-md rounded-3xl border border-border bg-surface p-5 shadow-2xl sm:p-6">
+      <div className="relative z-101 w-full max-w-md rounded-3xl border border-border bg-surface p-5 shadow-2xl sm:p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="flex size-11 items-center justify-center rounded-2xl bg-primary-soft text-text-primary">
@@ -134,14 +134,13 @@ function LinkModal({
             </h3>
 
             <p className="mt-2 text-sm leading-6 text-text-secondary">
-              Masukkan URL tujuan untuk teks yang sedang
-              dipilih.
+              Masukkan URL tujuan untuk teks yang sedang dipilih.
             </p>
           </div>
 
           <button
             type="button"
-            aria-label="Tutup"
+            aria-label="Tutup modal"
             onClick={onClose}
             className="flex size-9 shrink-0 items-center justify-center rounded-full text-text-secondary transition-colors hover:bg-primary-soft hover:text-text-primary"
           >
@@ -149,10 +148,7 @@ function LinkModal({
           </button>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="mt-6"
-        >
+        <div className="mt-6">
           <label
             htmlFor="backlink-url"
             className="mb-2 block text-sm font-medium text-text-primary"
@@ -162,15 +158,25 @@ function LinkModal({
 
           <input
             id="backlink-url"
-            type="text"
+            type="url"
             value={url}
             onChange={(event) => {
               setUrl(event.target.value)
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                handleSave()
+              }
             }}
             placeholder="https://example.com"
             autoFocus
             className="h-12 w-full rounded-2xl border border-border bg-background px-4 text-sm text-text-primary outline-none placeholder:text-text-muted focus:ring-2 focus:ring-primary/40"
           />
+
+          <p className="mt-2 text-xs leading-5 text-text-muted">
+            Masukkan URL lengkap, misalnya https://example.com.
+          </p>
 
           <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
@@ -182,14 +188,15 @@ function LinkModal({
             </button>
 
             <button
-              type="submit"
+              type="button"
+              onClick={handleSave}
               className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-sm font-semibold text-text-primary transition-transform hover:-translate-y-0.5"
             >
               <LinkIcon size={17} />
               Simpan Link
             </button>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )
@@ -201,10 +208,24 @@ export function ArticleEditor({
 }: ArticleEditorProps) {
   const [isMounted, setIsMounted] = useState(false)
 
+  const [isBubbleMenuVisible, setIsBubbleMenuVisible] =
+    useState(false)
+
+  const [bubblePosition, setBubblePosition] =
+    useState<BubblePosition>({
+      top: 0,
+      left: 0,
+    })
+
   const [isLinkModalOpen, setIsLinkModalOpen] =
     useState(false)
 
   const [linkUrl, setLinkUrl] = useState('')
+
+  const selectionRef = useRef<{
+    from: number
+    to: number
+  } | null>(null)
 
   useEffect(() => {
     setIsMounted(true)
@@ -229,10 +250,6 @@ export function ArticleEditor({
           target: '_blank',
         },
       }),
-
-      BubbleMenu.configure({
-        element: document.createElement('div'),
-      }),
     ],
 
     content: parseEditorContent(content),
@@ -240,18 +257,69 @@ export function ArticleEditor({
     editorProps: {
       attributes: {
         class:
-          'article-editor-content min-h-105 break-words px-4 py-5 text-base leading-8 text-text-primary outline-none sm:px-6 sm:py-6',
+          'article-editor-content min-h-[420px] break-words px-4 py-5 text-base leading-8 text-text-primary outline-none sm:px-6 sm:py-6',
       },
     },
 
     onUpdate: ({ editor: currentEditor }) => {
       onChange(
-        JSON.stringify(
-          currentEditor.getJSON(),
-        ),
+        JSON.stringify(currentEditor.getJSON()),
       )
     },
+
+    onSelectionUpdate: ({
+      editor: currentEditor,
+    }) => {
+      updateBubbleMenu(currentEditor)
+    },
+
+    onFocus: ({ editor: currentEditor }) => {
+      updateBubbleMenu(currentEditor)
+    },
+
+    onBlur: () => {
+      window.setTimeout(() => {
+        if (!isLinkModalOpen) {
+          setIsBubbleMenuVisible(false)
+        }
+      }, 150)
+    },
   })
+
+  function updateBubbleMenu(
+    currentEditor: NonNullable<typeof editor>,
+  ) {
+    const { from, to, empty } =
+      currentEditor.state.selection
+
+    if (empty || from === to) {
+      setIsBubbleMenuVisible(false)
+      return
+    }
+
+    selectionRef.current = {
+      from,
+      to,
+    }
+
+    const start = currentEditor.view.coordsAtPos(from)
+    const end = currentEditor.view.coordsAtPos(to)
+
+    const left =
+      start.left + (end.right - start.left) / 2
+
+    const top = Math.max(
+      12,
+      start.top - 12,
+    )
+
+    setBubblePosition({
+      top,
+      left,
+    })
+
+    setIsBubbleMenuVisible(true)
+  }
 
   if (!isMounted || editor === null) {
     return (
@@ -263,7 +331,26 @@ export function ArticleEditor({
 
   const currentEditor = editor
 
+  function restoreSelection() {
+    const savedSelection = selectionRef.current
+
+    if (!savedSelection) {
+      return
+    }
+
+    currentEditor
+      .chain()
+      .focus()
+      .setTextSelection({
+        from: savedSelection.from,
+        to: savedSelection.to,
+      })
+      .run()
+  }
+
   function setHeading(level: HeadingLevel) {
+    restoreSelection()
+
     currentEditor
       .chain()
       .focus()
@@ -271,41 +358,20 @@ export function ArticleEditor({
       .run()
   }
 
-  function changeBlockFormat(value: string) {
-    if (value === 'paragraph') {
+  function openLinkModal() {
+    const savedSelection = selectionRef.current
+
+    if (savedSelection) {
       currentEditor
         .chain()
         .focus()
-        .setParagraph()
+        .setTextSelection({
+          from: savedSelection.from,
+          to: savedSelection.to,
+        })
         .run()
-
-      return
     }
 
-    const levelMap: Record<
-      string,
-      HeadingLevel
-    > = {
-      'heading-1': 1,
-      'heading-2': 2,
-      'heading-3': 3,
-      'heading-4': 4,
-    }
-
-    const level = levelMap[value]
-
-    if (!level) {
-      return
-    }
-
-    currentEditor
-      .chain()
-      .focus()
-      .setHeading({ level })
-      .run()
-  }
-
-  function openLinkModal() {
     const previousUrl =
       currentEditor.getAttributes('link')
         .href as string | undefined
@@ -314,7 +380,29 @@ export function ArticleEditor({
     setIsLinkModalOpen(true)
   }
 
+  function closeLinkModal() {
+    setIsLinkModalOpen(false)
+    setIsBubbleMenuVisible(false)
+
+    window.setTimeout(() => {
+      currentEditor.commands.focus()
+    }, 0)
+  }
+
   function saveLink(url: string) {
+    const savedSelection = selectionRef.current
+
+    if (savedSelection) {
+      currentEditor
+        .chain()
+        .focus()
+        .setTextSelection({
+          from: savedSelection.from,
+          to: savedSelection.to,
+        })
+        .run()
+    }
+
     if (!url) {
       currentEditor
         .chain()
@@ -324,6 +412,8 @@ export function ArticleEditor({
         .run()
 
       setIsLinkModalOpen(false)
+      setIsBubbleMenuVisible(false)
+
       return
     }
 
@@ -343,38 +433,21 @@ export function ArticleEditor({
       .run()
 
     setIsLinkModalOpen(false)
+    setIsBubbleMenuVisible(false)
   }
 
   function removeLink() {
+    restoreSelection()
+
     currentEditor
       .chain()
       .focus()
       .extendMarkRange('link')
       .unsetLink()
       .run()
-  }
 
-  const blockFormat = currentEditor.isActive(
-    'heading',
-    { level: 1 },
-  )
-    ? 'heading-1'
-    : currentEditor.isActive(
-          'heading',
-          { level: 2 },
-        )
-      ? 'heading-2'
-      : currentEditor.isActive(
-            'heading',
-            { level: 3 },
-          )
-        ? 'heading-3'
-        : currentEditor.isActive(
-              'heading',
-              { level: 4 },
-            )
-          ? 'heading-4'
-          : 'paragraph'
+    setIsBubbleMenuVisible(false)
+  }
 
   return (
     <>
@@ -405,46 +478,6 @@ export function ArticleEditor({
           >
             <Redo2 size={17} />
           </ToolbarButton>
-
-          <div className="hidden h-6 w-px bg-border sm:block" />
-
-          <div className="relative min-w-0 flex-1 sm:flex-none">
-            <select
-              aria-label="Format teks"
-              value={blockFormat}
-              onChange={(event) => {
-                changeBlockFormat(
-                  event.target.value,
-                )
-              }}
-              className="h-9 w-full min-w-0 appearance-none rounded-lg border border-border bg-surface py-0 pl-3 pr-8 text-sm font-medium text-text-primary outline-none transition-colors hover:bg-primary-soft focus:ring-2 focus:ring-primary/40 sm:h-10 sm:w-36 sm:rounded-xl"
-            >
-              <option value="paragraph">
-                Paragraph
-              </option>
-
-              <option value="heading-1">
-                Heading 1
-              </option>
-
-              <option value="heading-2">
-                Heading 2
-              </option>
-
-              <option value="heading-3">
-                Heading 3
-              </option>
-
-              <option value="heading-4">
-                Heading 4
-              </option>
-            </select>
-
-            <ChevronDown
-              size={16}
-              className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-text-secondary"
-            />
-          </div>
 
           <div className="hidden h-6 w-px bg-border sm:block" />
 
@@ -541,18 +574,131 @@ export function ArticleEditor({
         </div>
 
         <div className="relative">
-          <EditorContent
-            editor={currentEditor}
-          />
+          <EditorContent editor={currentEditor} />
         </div>
       </div>
+
+      {isBubbleMenuVisible ? (
+        <div
+          className="fixed z-90 flex max-w-[calc(100vw-24px)] -translate-x-1/2 -translate-y-full items-center gap-1 overflow-x-auto rounded-2xl border border-border bg-surface p-1.5 shadow-xl"
+          style={{
+            top: bubblePosition.top,
+            left: bubblePosition.left,
+          }}
+          onMouseDown={(event) => {
+            event.preventDefault()
+          }}
+        >
+          <ToolbarButton
+            label="Bold"
+            isActive={currentEditor.isActive('bold')}
+            onClick={() => {
+              restoreSelection()
+
+              currentEditor
+                .chain()
+                .focus()
+                .toggleBold()
+                .run()
+            }}
+          >
+            <Bold size={16} />
+          </ToolbarButton>
+
+          <ToolbarButton
+            label="Italic"
+            isActive={currentEditor.isActive('italic')}
+            onClick={() => {
+              restoreSelection()
+
+              currentEditor
+                .chain()
+                .focus()
+                .toggleItalic()
+                .run()
+            }}
+          >
+            <Italic size={16} />
+          </ToolbarButton>
+
+          <div className="h-6 w-px shrink-0 bg-border" />
+
+          <ToolbarButton
+            label="Heading 1"
+            isActive={currentEditor.isActive(
+              'heading',
+              {
+                level: 1,
+              },
+            )}
+            onClick={() => {
+              setHeading(1)
+            }}
+          >
+            <Heading1 size={17} />
+          </ToolbarButton>
+
+          <ToolbarButton
+            label="Heading 2"
+            isActive={currentEditor.isActive(
+              'heading',
+              {
+                level: 2,
+              },
+            )}
+            onClick={() => {
+              setHeading(2)
+            }}
+          >
+            <Heading2 size={17} />
+          </ToolbarButton>
+
+          <ToolbarButton
+            label="Heading 3"
+            isActive={currentEditor.isActive(
+              'heading',
+              {
+                level: 3,
+              },
+            )}
+            onClick={() => {
+              setHeading(3)
+            }}
+          >
+            <Heading3 size={17} />
+          </ToolbarButton>
+
+          <ToolbarButton
+            label="Heading 4"
+            isActive={currentEditor.isActive(
+              'heading',
+              {
+                level: 4,
+              },
+            )}
+            onClick={() => {
+              setHeading(4)
+            }}
+          >
+            <Heading4 size={17} />
+          </ToolbarButton>
+
+          <div className="h-6 w-px shrink-0 bg-border" />
+
+          <ToolbarButton
+            label="Tambah backlink"
+            isActive={currentEditor.isActive('link')}
+            onClick={openLinkModal}
+          >
+            <LinkIcon size={17} />
+          </ToolbarButton>
+        </div>
+      ) : null}
 
       <LinkModal
         isOpen={isLinkModalOpen}
         initialUrl={linkUrl}
-        onClose={() => {
-          setIsLinkModalOpen(false)
-        }}
+        onClose={closeLinkModal}
         onSubmit={saveLink}
       />
 
@@ -628,21 +774,6 @@ export function ArticleEditor({
           text-decoration: underline;
           text-decoration-thickness: 2px;
           text-underline-offset: 4px;
-        }
-
-        .article-editor-bubble-menu {
-          display: flex;
-          align-items: center;
-          gap: 0.25rem;
-          max-width: calc(100vw - 2rem);
-          overflow-x: auto;
-          border: 1px solid var(--border);
-          border-radius: 1rem;
-          background: var(--surface);
-          padding: 0.375rem;
-          box-shadow:
-            0 20px 25px -5px rgb(0 0 0 / 0.1),
-            0 8px 10px -6px rgb(0 0 0 / 0.1);
         }
 
         @media (min-width: 640px) {
