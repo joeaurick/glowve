@@ -1,111 +1,105 @@
 'use client'
 
-import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import {
-  Menu,
-  Search,
-  X,
-} from 'lucide-react'
+import { Menu, Search, X } from 'lucide-react'
+import { useState } from 'react'
 
-import { Button } from '@/components/ui/button'
-import { Container } from '@/components/ui/container'
+const navigation = [
+  {
+    name: 'Beranda',
+    href: '/',
+  },
+  {
+    name: 'Artikel',
+    href: '#articles',
+  },
+  {
+    name: 'Kategori',
+    href: '#categories',
+  },
+  {
+    name: 'Tentang',
+    href: '#about',
+  },
+]
 
-type NavbarProps = {
-  brandName: string
-}
+export function Navbar() {
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
 
-export function Navbar({
-  brandName,
-}: NavbarProps) {
-  const [isMenuOpen, setIsMenuOpen] =
-    useState(false)
-
-  function handleCloseMenu() {
+  function closeMenu() {
     setIsMenuOpen(false)
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-xl">
-      <Container>
-        <div className="flex h-16 items-center justify-between sm:h-20">
+    <header className="relative z-50 px-4 pt-4 sm:px-6 sm:pt-5 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <nav className="flex h-16 items-center justify-between rounded-3xl border border-border bg-surface/90 px-4 shadow-soft backdrop-blur-xl sm:h-[72px] sm:px-6 lg:px-7">
           {/* Logo */}
+
           <Link
             href="/"
-            onClick={handleCloseMenu}
-            className="flex min-w-0 items-center gap-3"
+            aria-label="Suara Wanita"
+            className="flex shrink-0 items-center"
+            onClick={closeMenu}
           >
-            <div className="relative size-10 shrink-0 overflow-hidden sm:size-11">
-              <Image
-                src="/images/suara-wanita-logo.png"
-                alt="Suara Wanita"
-                fill
-                priority
-                sizes="(max-width: 640px) 40px, 44px"
-                className="object-contain"
-              />
-            </div>
-
-            <div className="min-w-0">
-              <span className="block truncate text-base font-semibold tracking-tight text-text-primary sm:text-lg">
-                {brandName}
-              </span>
-
-              <span className="hidden text-[9px] font-medium uppercase tracking-[0.18em] text-text-muted sm:block">
-                Ruang untuk bersuara
-              </span>
-            </div>
+            <Image
+              src="/images/suara-wanita-logo.png"
+              alt="Suara Wanita"
+              width={220}
+              height={80}
+              priority
+              className="h-auto w-32 object-contain sm:w-36 lg:w-40"
+            />
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden items-center gap-8 lg:flex">
+
+          <div className="hidden items-center gap-7 lg:flex xl:gap-9">
+            {navigation.map((item) => (
+              <Link
+                key={item.name}
+                href={item.href}
+                className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
+
+          {/* Desktop Actions */}
+
+          <div className="hidden items-center gap-3 lg:flex">
+            <Link
+              href="/search"
+              aria-label="Cari"
+              className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-secondary transition-transform hover:scale-105"
+            >
+              <Search size={18} />
+            </Link>
+
             <Link
               href="#discover"
-              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-            >
-              Beranda
-            </Link>
-
-            <Link
-              href="#reviews"
-              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-            >
-              Artikel
-            </Link>
-
-            <Link
-              href="#beauty-picks"
-              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-            >
-              Pilihan
-            </Link>
-
-            <Link
-              href="#about"
-              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
-            >
-              Tentang
-            </Link>
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              aria-label="Cari"
-              className="flex size-10 items-center justify-center rounded-full text-text-primary transition-colors hover:bg-surface-muted"
-            >
-              <Search size={20} />
-            </button>
-
-            <Button
-              variant="dark"
-              size="sm"
-              className="hidden sm:inline-flex"
+              className="inline-flex h-10 items-center gap-2 rounded-full bg-text-primary px-5 text-sm font-medium text-text-inverse transition-transform hover:-translate-y-0.5"
             >
               Jelajahi
-            </Button>
+
+              <span aria-hidden="true">
+                →
+              </span>
+            </Link>
+          </div>
+
+          {/* Mobile Actions */}
+
+          <div className="flex items-center gap-2 lg:hidden">
+            <Link
+              href="/search"
+              aria-label="Cari"
+              className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-secondary"
+            >
+              <Search size={18} />
+            </Link>
 
             <button
               type="button"
@@ -115,68 +109,52 @@ export function Navbar({
                   : 'Buka menu'
               }
               onClick={() =>
-                setIsMenuOpen((current) => !current)
+                setIsMenuOpen(!isMenuOpen)
               }
-              className="flex size-10 items-center justify-center rounded-full bg-surface-muted text-text-primary transition-colors lg:hidden"
+              className="flex size-10 items-center justify-center rounded-full bg-text-primary text-text-inverse transition-transform active:scale-95"
             >
               {isMenuOpen ? (
-                <X size={21} />
+                <X size={19} />
               ) : (
-                <Menu size={21} />
+                <Menu size={20} />
               )}
             </button>
           </div>
-        </div>
+        </nav>
 
-        {/* Mobile Navigation */}
+        {/* Mobile Menu */}
+
         {isMenuOpen ? (
-          <nav className="border-t border-border py-4 lg:hidden">
-            <div className="flex flex-col gap-1">
+          <div className="mt-3 overflow-hidden rounded-3xl border border-border bg-surface p-3 shadow-card backdrop-blur-xl lg:hidden">
+            <div className="space-y-1">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  onClick={closeMenu}
+                  className="flex min-h-12 items-center rounded-2xl px-4 text-sm font-medium text-text-secondary transition-colors hover:bg-primary-soft hover:text-text-primary"
+                >
+                  {item.name}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-3 border-t border-border pt-3">
               <Link
                 href="#discover"
-                onClick={handleCloseMenu}
-                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
+                onClick={closeMenu}
+                className="flex h-12 items-center justify-center gap-2 rounded-2xl bg-text-primary px-5 text-sm font-semibold text-text-inverse"
               >
-                Beranda
-              </Link>
+                Jelajahi
 
-              <Link
-                href="#reviews"
-                onClick={handleCloseMenu}
-                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
-              >
-                Artikel
+                <span aria-hidden="true">
+                  →
+                </span>
               </Link>
-
-              <Link
-                href="#beauty-picks"
-                onClick={handleCloseMenu}
-                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
-              >
-                Pilihan
-              </Link>
-
-              <Link
-                href="#about"
-                onClick={handleCloseMenu}
-                className="rounded-xl px-4 py-3 text-sm font-medium text-text-secondary transition-colors hover:bg-surface-muted hover:text-text-primary"
-              >
-                Tentang
-              </Link>
-
-              <div className="mt-3 border-t border-border pt-3">
-                <Button
-                  variant="dark"
-                  size="lg"
-                  className="w-full"
-                >
-                  Jelajahi
-                </Button>
-              </div>
             </div>
-          </nav>
+          </div>
         ) : null}
-      </Container>
+      </div>
     </header>
   )
 }

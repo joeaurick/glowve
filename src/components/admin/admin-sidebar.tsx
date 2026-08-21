@@ -1,9 +1,9 @@
 'use client'
 
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import {
   ArrowUpRight,
   FileText,
@@ -69,47 +69,38 @@ function isActivePath(
 
 type NavigationContentProps = {
   pathname: string
-  brandName: string
   onNavigate?: () => void
   onLogout: () => void
 }
 
 function NavigationContent({
   pathname,
-  brandName,
   onNavigate,
   onLogout,
 }: NavigationContentProps) {
   return (
     <>
-      {/* Brand */}
+      {/* Brand Logo */}
       <div className="px-5 pb-5 pt-6">
         <Link
           href="/admin"
           onClick={onNavigate}
-          className="group flex items-center gap-3"
+          aria-label="Suara Wanita Admin"
+          className="group flex items-center"
         >
-          <div className="relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl transition-transform duration-300 group-hover:scale-105">
-            <Image
-              src="/images/suara-wanita-logo.png"
-              alt="Suara Wanita"
-              fill
-              sizes="44px"
-              className="object-contain"
-              priority
-            />
-          </div>
-
-          <div className="min-w-0">
-            <p className="text-lg font-semibold tracking-tight text-text-primary">
-              {brandName}
-            </p>
-
-            <p className="text-xs text-text-muted">
-              Content Studio
-            </p>
-          </div>
+          <Image
+            src="/images/suara-wanita-logo.png"
+            alt="Suara Wanita"
+            width={220}
+            height={80}
+            priority
+            className="h-auto w-40 object-contain transition-transform duration-300 group-hover:scale-[1.02]"
+          />
         </Link>
+
+        <p className="mt-2 pl-1 text-xs text-text-muted">
+          Content Studio
+        </p>
       </div>
 
       {/* Navigation */}
@@ -168,13 +159,13 @@ function NavigationContent({
               />
 
               <p className="text-xs font-semibold text-text-primary">
-                {brandName} Guide
+                Beauty Guide
               </p>
             </div>
 
             <p className="mt-2 text-xs leading-5 text-text-secondary">
               Kelola artikel, kategori, dan produk
-              untuk website {brandName}.
+              untuk website Suara Wanita.
             </p>
 
             <Link
@@ -203,7 +194,7 @@ function NavigationContent({
               </p>
 
               <p className="truncate text-xs text-text-muted">
-                {brandName} Admin
+                Admin Panel
               </p>
             </div>
           </div>
@@ -228,34 +219,6 @@ export function AdminSidebar() {
   const [isMobileOpen, setIsMobileOpen] =
     useState(false)
 
-  const [brandName, setBrandName] =
-    useState('Suara Wanita')
-
-  useEffect(() => {
-    async function loadBrandName() {
-      const { data, error } = await supabase
-        .from('site_settings')
-        .select('brand_name')
-        .limit(1)
-        .maybeSingle()
-
-      if (error) {
-        console.error(
-          'Failed to load brand name:',
-          error,
-        )
-
-        return
-      }
-
-      if (data?.brand_name?.trim()) {
-        setBrandName(data.brand_name.trim())
-      }
-    }
-
-    void loadBrandName()
-  }, [])
-
   async function handleLogout() {
     await supabase.auth.signOut()
 
@@ -272,7 +235,6 @@ export function AdminSidebar() {
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-72 flex-col overflow-y-auto border-r border-border bg-surface lg:flex">
         <NavigationContent
           pathname={pathname}
-          brandName={brandName}
           onLogout={() => {
             void handleLogout()
           }}
@@ -283,28 +245,17 @@ export function AdminSidebar() {
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-border bg-background/95 px-4 backdrop-blur-xl lg:hidden">
         <Link
           href="/admin"
-          className="flex items-center gap-2.5"
+          aria-label="Suara Wanita Admin"
+          className="flex items-center"
         >
-          <div className="relative flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-xl">
-            <Image
-              src="/images/suara-wanita-logo.png"
-              alt="Suara Wanita"
-              fill
-              sizes="40px"
-              className="object-contain"
-              priority
-            />
-          </div>
-
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold tracking-tight text-text-primary">
-              {brandName}
-            </p>
-
-            <p className="text-[10px] uppercase tracking-[0.16em] text-text-muted">
-              Studio
-            </p>
-          </div>
+          <Image
+            src="/images/suara-wanita-logo.png"
+            alt="Suara Wanita"
+            width={180}
+            height={60}
+            priority
+            className="h-auto w-32 object-contain sm:w-36"
+          />
         </Link>
 
         <button
@@ -358,7 +309,6 @@ export function AdminSidebar() {
 
           <NavigationContent
             pathname={pathname}
-            brandName={brandName}
             onNavigate={closeMenu}
             onLogout={() => {
               void handleLogout()
